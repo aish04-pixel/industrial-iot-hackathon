@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b1220" />
+  <title>WiredMinds | Industrial IoT Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#" aria-label="WiredMinds home">
+        <span class="brand-mark">W<span>.</span></span>
+        <span class="brand-copy"><strong>WiredMinds</strong><small>INDUSTRIAL INTELLIGENCE</small></span>
+      </a>
+
+      <div class="side-label">WORKSPACE</div>
+      <nav class="nav-menu" aria-label="Main navigation">
+        <button class="nav-item active" data-view="overview"><span class="nav-icon">◫</span> Overview</button>
+        <button class="nav-item" data-view="devices"><span class="nav-icon">▦</span> Devices <span class="nav-count">5</span></button>
+        <button class="nav-item" data-view="analytics"><span class="nav-icon">⌁</span> Analytics</button>
+        <button class="nav-item" data-view="alerts"><span class="nav-icon">♧</span> Alerts <span class="nav-count alert-count">3</span></button>
+      </nav>
+
+      <div class="side-label side-label-spaced">SYSTEM</div>
+      <nav class="nav-menu">
+        <button class="nav-item" data-view="controls"><span class="nav-icon">⏻</span> Remote control</button>
+        <button class="nav-item" data-view="settings"><span class="nav-icon">⚙</span> Settings</button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="connection-card">
+          <span class="live-dot"></span>
+          <div><strong>Simulation mode</strong><small>Using sample telemetry</small></div>
+        </div>
+        <div class="profile">
+          <div class="avatar">WM</div>
+          <div class="profile-copy"><strong>WiredMinds Team</strong><small>Administrator</small></div>
+          <span class="profile-more">•••</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-menu" id="mobileMenu" aria-label="Toggle navigation">☰</button>
+          <div class="breadcrumb">Factory / <strong id="breadcrumbCurrent">Overview</strong></div>
+        </div>
+        <div class="topbar-right">
+          <div class="environment"><span class="live-dot"></span> DEMO ENVIRONMENT</div>
+          <button class="icon-button" id="refreshBtn" title="Refresh sample data" aria-label="Refresh sample data">↻</button>
+          <button class="notification-button" data-view="alerts" aria-label="View alerts">♧<i></i></button>
+        </div>
+      </header>
+
+      <section class="page active-page" id="overviewView">
+        <div class="page-heading">
+          <div><div class="eyebrow">THURSDAY, NOVEMBER 12, 2026 <span class="eyebrow-line"></span> PLANT 01</div><h1>Operations overview</h1><p class="page-subtitle">Monitor equipment health and factory performance in real time.</p></div>
+          <div class="heading-actions"><span class="updated-label">Updated <strong id="lastUpdated">just now</strong></span><button class="button button-secondary" id="exportBtn">↓ <span>Export report</span></button></div>
+        </div>
+
+        <div class="stat-grid">
+          <article class="stat-card"><div class="stat-top"><span>Total devices</span><span class="stat-icon blue">▦</span></div><div class="stat-value" id="totalDevices">05</div><div class="stat-foot"><span class="muted">Across Plant 01</span><span class="trend neutral">● Registered</span></div></article>
+          <article class="stat-card"><div class="stat-top"><span>Online devices</span><span class="stat-icon green">⌁</span></div><div class="stat-value" id="onlineDevices">04</div><div class="stat-foot"><span class="muted">Connected to gateway</span><span class="trend positive">↑ 80% uptime</span></div></article>
+          <article class="stat-card"><div class="stat-top"><span>Active alerts</span><span class="stat-icon orange">!</span></div><div class="stat-value" id="activeAlerts">03</div><div class="stat-foot"><span class="muted">Needs attention</span><span class="trend negative">2 critical / 1 warning</span></div></article>
+          <article class="stat-card"><div class="stat-top"><span>Plant health</span><span class="stat-icon purple">✳</span></div><div class="stat-value">92<span class="value-unit">/100</span></div><div class="health-meter"><span style="width:92%"></span></div><div class="stat-foot"><span class="muted">Overall equipment score</span><span class="trend positive">Good</span></div></article>
+        </div>
+
+        <div class="content-grid">
+          <article class="panel chart-panel">
+            <div class="panel-heading"><div><h2>Live equipment telemetry</h2><p>Temperature readings across the last 12 intervals</p></div><div class="chart-legend"><span><i class="legend-dot teal"></i> Motor 01</span><span><i class="legend-dot violet"></i> Motor 02</span></div></div>
+            <div class="chart-summary"><strong id="chartCurrent">68.4°</strong><span>Current temperature <b class="positive-text">● Normal range</b></span></div>
+            <div class="chart-wrap"><canvas id="telemetryChart" aria-label="Temperature telemetry line chart"></canvas></div>
+            <div class="chart-axis"><span>09:00</span><span>10:00</span><span>11:00</span><span>12:00</span><span>13:00</span><span>14:00</span></div>
+          </article>
+
+          <article class="panel health-panel">
+            <div class="panel-heading"><div><h2>Equipment health</h2><p>Current plant distribution</p></div><button class="text-button" data-view="devices">View all →</button></div>
+            <div class="health-visual"><div class="donut"><div class="donut-center"><strong>05</strong><small>DEVICES</small></div></div></div>
+            <div class="health-legend">
+              <div><span><i class="legend-dot green"></i> Healthy</span><strong>2 <small>40%</small></strong></div>
+              <div><span><i class="legend-dot orange"></i> Warning</span><strong>2 <small>40%</small></strong></div>
+              <div><span><i class="legend-dot red"></i> Critical</span><strong>1 <small>20%</small></strong></div>
+            </div>
+          </article>
+        </div>
+
+        <div class="lower-grid">
+          <article class="panel devices-panel">
+            <div class="panel-heading"><div><h2>Device status</h2><p>Equipment currently being monitored</p></div><button class="text-button" data-view="devices">All devices →</button></div>
+            <div class="table-scroll"><table><thead><tr><th>DEVICE</th><th>TEMPERATURE</th><th>VIBRATION</th><th>RPM</th><th>STATUS</th></tr></thead><tbody id="deviceTableBody"></tbody></table></div>
+          </article>
+          <article class="panel alerts-panel">
+            <div class="panel-heading"><div><h2>Recent alerts</h2><p>Latest equipment notifications</p></div><button class="text-button" data-view="alerts">View all →</button></div>
+            <div id="recentAlerts" class="recent-alert-list"></div>
+          </article>
+        </div>
+        <footer class="page-footer"><span>© 2026 WiredMinds · Industrial IoT Monitoring</span><span><i class="live-dot"></i> Demo data is simulated</span></footer>
+      </section>
+
+      <section class="page" id="devicesView">
+        <div class="page-heading"><div><div class="eyebrow">ASSET MANAGEMENT</div><h1>Device registry</h1><p class="page-subtitle">Inspect the connected equipment and its latest sensor readings.</p></div><button class="button button-primary" id="addDeviceBtn">＋ Add device</button></div>
+        <div class="toolbar"><div class="search-box">⌕ <input id="deviceSearch" type="search" placeholder="Search device name or ID..." /></div><select id="statusFilter" aria-label="Filter by status"><option value="all">All statuses</option><option value="Healthy">Healthy</option><option value="Warning">Warning</option><option value="Critical">Critical</option><option value="Offline">Offline</option></select></div>
+        <div class="device-card-grid" id="deviceCards"></div>
+      </section>
+
+      <section class="page" id="analyticsView">
+        <div class="page-heading"><div><div class="eyebrow">PERFORMANCE INSIGHTS</div><h1>Analytics</h1><p class="page-subtitle">Understand operating patterns and sensor behaviour.</p></div><span class="period-pill">Last 6 hours ▾</span></div>
+        <div class="stat-grid analytics-stats">
+          <article class="stat-card"><div class="stat-top"><span>Average temperature</span><span class="stat-icon orange">℃</span></div><div class="stat-value">64.8<span class="value-unit">°C</span></div><div class="stat-foot"><span class="muted">All active motors</span><span class="trend positive">Within range</span></div></article>
+          <article class="stat-card"><div class="stat-top"><span>Average vibration</span><span class="stat-icon blue">〰</span></div><div class="stat-value">2.4<span class="value-unit">mm/s</span></div><div class="stat-foot"><span class="muted">Overall average</span><span class="trend positive">Stable</span></div></article>
+          <article class="stat-card"><div class="stat-top"><span>Average speed</span><span class="stat-icon purple">↗</span></div><div class="stat-value">1,420<span class="value-unit">RPM</span></div><div class="stat-foot"><span class="muted">Running equipment</span><span class="trend neutral">Nominal</span></div></article>
+          <article class="stat-card"><div class="stat-top"><span>Availability</span><span class="stat-icon green">◷</span></div><div class="stat-value">98.2<span class="value-unit">%</span></div><div class="stat-foot"><span class="muted">Current shift</span><span class="trend positive">+1.2%</span></div></article>
+        </div>
+        <article class="panel analytics-chart-panel"><div class="panel-heading"><div><h2>Temperature trend</h2><p>Sample data · temperature in °C</p></div><span class="chart-tag">°C</span></div><div class="large-chart-wrap"><canvas id="analyticsChart"></canvas></div></article>
+        <div class="panel insight-panel"><div class="insight-symbol">✦</div><div><strong>Operational insight</strong><p>Motor 03 is showing elevated vibration compared with the other motors. Schedule an inspection to check alignment and bearing condition.</p></div></div>
+      </section>
+
+      <section class="page" id="alertsView">
+        <div class="page-heading"><div><div class="eyebrow">EVENT CENTRE</div><h1>Alerts & events</h1><p class="page-subtitle">Review unusual readings and track acknowledgement.</p></div><button class="button button-secondary" id="clearResolvedBtn">Clear resolved</button></div>
+        <div class="alert-summary-row"><div class="alert-summary"><span class="severity-dot red"></span><div><strong id="criticalCount">2</strong><small>Critical</small></div></div><div class="alert-summary"><span class="severity-dot orange"></span><div><strong id="warningCount">1</strong><small>Warning</small></div></div><div class="alert-summary"><span class="severity-dot green"></span><div><strong id="resolvedCount">1</strong><small>Resolved</small></div></div></div>
+        <div class="panel full-alert-panel"><div class="panel-heading"><div><h2>Alert history</h2><p>Most recent events first</p></div><select id="alertFilter" aria-label="Filter alerts"><option value="all">All events</option><option value="Active">Active only</option><option value="Resolved">Resolved</option></select></div><div id="allAlerts" class="all-alert-list"></div></div>
+      </section>
+
+      <section class="page" id="controlsView">
+        <div class="page-heading"><div><div class="eyebrow">REMOTE OPERATIONS</div><h1>Remote control</h1><p class="page-subtitle">Send a simulated command to an equipment unit.</p></div><span class="demo-warning">⚠ DEMO ONLY</span></div>
+        <div class="control-notice"><strong>Simulation mode is active.</strong> These buttons only update the local demo interface. They do not operate physical machinery. Real commands will be enabled only after secure backend and device integration.</div>
+        <div class="control-layout"><article class="panel control-device-panel"><div class="panel-heading"><div><h2>Select equipment</h2><p>Choose a device to control</p></div></div><div id="controlDeviceList" class="control-device-list"></div></article><article class="panel command-panel"><div class="panel-heading"><div><h2>Command console</h2><p id="selectedDeviceLabel">Selected: Motor 01</p></div><span class="status-pill status-healthy" id="selectedDeviceStatus">Healthy</span></div><div class="selected-machine"><div class="machine-icon">⚙</div><div><strong id="selectedDeviceName">Motor 01</strong><small id="selectedDeviceId">MTR-001 · Production line A</small></div></div><div class="command-buttons"><button class="command-button start" data-command="START">▶ <span>Start</span></button><button class="command-button stop" data-command="STOP">■ <span>Stop</span></button><button class="command-button reset" data-command="RESET">↻ <span>Reset</span></button></div><div class="command-log-heading">COMMAND LOG <span>LOCAL DEMO</span></div><div id="commandLog" class="command-log"><div class="empty-log">No commands sent in this session.</div></div></article></div>
+      </section>
+
+      <section class="page" id="settingsView">
+        <div class="page-heading"><div><div class="eyebrow">PREFERENCES</div><h1>Settings</h1><p class="page-subtitle">Dashboard configuration and integration placeholders.</p></div></div>
+        <div class="settings-grid"><article class="panel settings-card"><h2>Project configuration</h2><div class="setting-row"><div><strong>Project name</strong><small>Workspace display name</small></div><span>WiredMinds</span></div><div class="setting-row"><div><strong>Plant identifier</strong><small>Active monitoring site</small></div><span>PLANT-01</span></div><div class="setting-row"><div><strong>Data source</strong><small>Current telemetry provider</small></div><span class="setting-value">Mock data</span></div></article><article class="panel settings-card"><h2>Future integrations</h2><div class="integration-row"><span class="integration-icon">◉</span><div><strong>FastAPI backend</strong><small>REST endpoints and WebSocket stream</small></div><span class="integration-state">Not connected</span></div><div class="integration-row"><span class="integration-icon">⌁</span><div><strong>MQTT broker</strong><small>Telemetry and device command topics</small></div><span class="integration-state">Not connected</span></div><div class="integration-row"><span class="integration-icon">▣</span><div><strong>Device simulator</strong><small>Wokwi / Python simulator</small></div><span class="integration-state">Not connected</span></div></article></div>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="js/script.js"></script>
+</body>
+</html>
