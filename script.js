@@ -1,6 +1,6 @@
 
 // WIREDMINDS - ROV MONITORING DASHBOARD
-// Initial version: simulated sensor telemetry
+// LIVE MQTT SENSOR TELEMETRY
 
 const $ = (id) => document.getElementById(id);
 
@@ -11,11 +11,7 @@ const state = {
   relayActive: false,
   selectedDevice: "ESP32",
   commandLog: [],
-  alerts: [
-    { id: 1, title: "High hull pressure warning", severity: "Warning", active: true },
-    { id: 2, title: "Water ingress detected", severity: "Critical", active: true },
-    { id: 3, title: "Communication interruption", severity: "Critical", active: true }
-  ]
+  alerts: []
 };
 
 const devices = [
@@ -31,8 +27,10 @@ let toastTimer;
 function showToast(message) {
   const toast = $("toast");
   if (!toast) return;
+
   toast.textContent = message;
   toast.classList.add("show");
+
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toast.classList.remove("show"), 2500);
 }
@@ -84,7 +82,7 @@ $("mobileMenu")?.addEventListener("click", () => {
   $("sidebar")?.classList.toggle("sidebar-open");
 });
 
-// UPDATE ROV SENSOR STATUS
+// SENSOR STATUS
 
 function getPressureStatus() {
   if (state.pressure >= 3500) return "Critical";
@@ -103,12 +101,6 @@ function isEmergency() {
 function updateDashboard() {
   const pressureStatus = getPressureStatus();
   const moistureStatus = getMoistureStatus();
-  const emergency = isEmergency();
-
-  const alarm =
-    emergency ||
-    pressureStatus === "Warning" ||
-    state.communicationFault;
 
   devices[0].value = state.pressure + " ADC";
   devices[0].status = pressureStatus;
@@ -119,18 +111,26 @@ function updateDashboard() {
   devices[2].value = state.communicationFault
     ? "Fault"
     : "Connected";
+
   devices[2].status = state.communicationFault
     ? "Critical"
     : "Healthy";
 
-  devices[3].value = emergency ? "Activated" : "Standby";
-  devices[3].status = emergency ? "Warning" : "Healthy";
+  devices[3].value = state.relayActive
+    ? "Activated"
+    : "Standby";
+
+  devices[3].status = state.relayActive
+    ? "Warning"
+    : "Healthy";
 
   devices[4].value = "Online";
 
   if ($("totalDevices")) $("totalDevices").textContent = "05";
+
   if ($("onlineDevices")) {
-    $("onlineDevices").textContent = state.communicationFault ? "04" : "05";
+    $("onlineDevices").textContent =
+      state.communicationFault ? "04" : "05";
   }
 
   if ($("activeAlerts")) {
@@ -143,12 +143,9 @@ function updateDashboard() {
     $("chartCurrent").textContent = state.pressure + " ADC";
   }
 
-  // Emergency relay indication
-  state.relayActive = emergency;
-
-  // Overview status indicators
-  const status = $("lastUpdated");
-  if (status) status.textContent = "just now";
+  if ($("lastUpdated")) {
+    $("lastUpdated").textContent = "just now";
+  }
 
   renderDeviceTable();
   renderDeviceCards();
@@ -247,11 +244,18 @@ function addAlert(title, severity) {
 
 function renderAlerts() {
   const active = state.alerts.filter(a => a.active);
-  const critical = active.filter(a => a.severity === "Critical").length;
-  const warning = active.filter(a => a.severity === "Warning").length;
+
+  const critical = active.filter(
+    a => a.severity === "Critical"
+  ).length;
+
+  const warning = active.filter(
+    a => a.severity === "Warning"
+  ).length;
 
   if ($("criticalCount")) $("criticalCount").textContent = critical;
   if ($("warningCount")) $("warningCount").textContent = warning;
+
   if ($("resolvedCount")) {
     $("resolvedCount").textContent =
       state.alerts.filter(a => !a.active).length;
@@ -295,6 +299,7 @@ function renderAlerts() {
       const alert = state.alerts.find(
         a => a.id === Number(button.dataset.ack)
       );
+
       if (alert) {
         alert.active = false;
         renderAlerts();
@@ -329,8 +334,8 @@ function drawAnalyticsChart() {
 
     canvas.width = width * devicePixelRatio;
     canvas.height = height * devicePixelRatio;
-    ctx.scale(devicePixelRatio, devicePixelRatio);
 
+    ctx.scale(devicePixelRatio, devicePixelRatio);
     ctx.clearRect(0, 0, width, height);
 
     const values = Array.from({ length: 12 }, (_, i) =>
@@ -397,7 +402,7 @@ document.querySelectorAll("[data-command]").forEach(button => {
   button.addEventListener("click", () => {
     const command = button.dataset.command;
 
-    // Demo-only: never controls real machinery.
+    // Demo-only: commands are not sent to physical machinery.
     if (command === "START" && isEmergency()) {
       showToast("Start blocked: emergency condition active.");
       return;
@@ -421,9 +426,136 @@ document.querySelectorAll("[data-command]").forEach(button => {
   });
 });
 
-// SAMPLE SENSOR INPUTS FOR DEMONSTRATION
+// ========================================
+// WIREDMINDS - LIVE MQTT CONNECTION
+// ========================================
 
+const MQTT_URL = "wss://broker.hivemq.com:8884/mqtt";
+const MQTT_TOPIC = "wiredminds/rov/team01/telemetry";
 
+let mqttClient = null;
+
+function connectMQTT() {
+  if (typeof mqtt === "undefined") {
+    console.error("MQTT library not loaded. Check index.html.");
+    showToast("MQTT library not loaded.");
+    return;
+  }
+
+  mqttClient = mqtt.connect(MQTT_URL, {
+    clientId: "WiredMindsDashboard" + Math.random().toString(16).slice(2, 10),
+    clean: true,
+    connectTimeout: 10000,
+    reconnectPeriod: 3000
+  });
+
+  mqttClient.on("connect", () => {
+    console.log("Connected to MQTT broker.");
+
+    mqttClient.subscribe(MQTT_TOPIC, (error) => {
+      if (error) {
+        console.error("MQTT subscription failed:", error);
+      } else {
+        console.log("Subscribed to:", MQTT_TOPIC);
+        showToast("Live MQTT connection established.");
+      }
+    });
+  });
+
+  mqttClient.on("message", (topic, message) => {
+    if (topic !== MQTT_TOPIC) return;
+
+    try {
+      const data = JSON.parse(message.toString());
+
+      const pressure = Number(data.pressure);
+      const moisture = Number(data.moisture);
+
+      if (!Number.isFinite(pressure) || !Number.isFinite(moisture)) {
+        console.error("Invalid MQTT sensor values:", data);
+        return;
+      }
+
+      state.pressure = Math.max(0, Math.min(4095, pressure));
+      state.moisture = Math.max(0, Math.min(4095, moisture));
+
+      state.communicationFault =
+        data.communicationFault === true;
+
+      if (typeof data.ballastPurge === "boolean") {
+        state.relayActive = data.ballastPurge;
+      } else if (typeof data.relayActive === "boolean") {
+        state.relayActive = data.relayActive;
+      } else {
+        state.relayActive = isEmergency();
+      }
+
+      // Update alerts from live sensor values.
+      syncLiveAlert(
+        "Critical hull pressure detected",
+        state.pressure >= 3500,
+        "Critical"
+      );
+
+      syncLiveAlert(
+        "Hull pressure warning",
+        state.pressure >= 2500 && state.pressure < 3500,
+        "Warning"
+      );
+
+      syncLiveAlert(
+        "Water ingress detected",
+        state.moisture >= 2500,
+        "Critical"
+      );
+
+      syncLiveAlert(
+        "Communication link failure",
+        state.communicationFault,
+        "Critical"
+      );
+
+      updateDashboard();
+      drawAnalyticsChart();
+
+      console.log("Live ESP32 data received:", data);
+
+    } catch (error) {
+      console.error("Could not process MQTT message:", error);
+    }
+  });
+
+  mqttClient.on("error", (error) => {
+    console.error("MQTT connection error:", error);
+  });
+
+  mqttClient.on("offline", () => {
+    console.log("MQTT dashboard offline.");
+  });
+
+  mqttClient.on("reconnect", () => {
+    console.log("Reconnecting to MQTT broker...");
+  });
+}
+
+// Add or resolve live alerts.
+
+function syncLiveAlert(title, condition, severity) {
+  let alert = state.alerts.find(a => a.title === title);
+
+  if (condition) {
+    if (!alert) {
+      addAlert(title, severity);
+    } else {
+      alert.active = true;
+    }
+  } else if (alert) {
+    alert.active = false;
+  }
+}
+
+// Connect website to MQTT broker.
+connectMQTT();
 
 // EXPORT REPORT
 
@@ -461,7 +593,5 @@ updateDashboard();
 drawAnalyticsChart();
 
 window.addEventListener("resize", drawAnalyticsChart);
-
-
 
 console.log("WiredMinds ROV dashboard initialized.");
