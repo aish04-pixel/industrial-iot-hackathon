@@ -423,38 +423,7 @@ document.querySelectorAll("[data-command]").forEach(button => {
 
 // SAMPLE SENSOR INPUTS FOR DEMONSTRATION
 
-function simulateSensorChange() {
-  // Small natural fluctuations around the current readings.
-  state.pressure = Math.max(
-    0, Math.min(4095, state.pressure + Math.round(Math.random() * 30 - 15))
-  );
 
-  state.moisture = Math.max(
-    0, Math.min(4095, state.moisture + Math.round(Math.random() * 20 - 10))
-  );
-
-  if (state.pressure >= 3500) {
-    addAlert("Critical hull pressure detected", "Critical");
-  } else if (state.pressure >= 2500) {
-    addAlert("Hull pressure warning", "Warning");
-  }
-
-  if (state.moisture >= 2500) {
-    addAlert("Water ingress detected", "Critical");
-  }
-
-  if (state.communicationFault) {
-    addAlert("Communication link failure", "Critical");
-  }
-
-  updateDashboard();
-  drawAnalyticsChart();
-}
-
-$("refreshBtn")?.addEventListener("click", () => {
-  simulateSensorChange();
-  showToast("Demo readings refreshed.");
-});
 
 // EXPORT REPORT
 
@@ -493,6 +462,6 @@ drawAnalyticsChart();
 
 window.addEventListener("resize", drawAnalyticsChart);
 
-setInterval(simulateSensorChange, 3000);
+
 
 console.log("WiredMinds ROV dashboard initialized.");
